@@ -15,7 +15,8 @@
 (define (name->linker-symbol c-name)
   (case (os-name)
     [(linux) c-name]
-    [(macosx) (format "_~a" c-name)]))
+    [(macosx) (format "_~a" c-name)]
+	[else (format "_~a" c-name)]))
 (define (build-assembly-file output-name start/end-name include-file)
   (with-output-to-file output-name
     (lambda ()

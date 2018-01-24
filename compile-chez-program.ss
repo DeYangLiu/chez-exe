@@ -51,10 +51,11 @@
     [linux (if (threaded?)
                "-ldl -lm -ltinfo -lpthread"
                "-ldl -lm -ltinfo")]
-    [macosx "-liconv -lncurses"]))
+    [macosx "-liconv -lncurses"]
+	[else "-lm  -lrpcrt4 -lole32"]))
 
 (build-assembly-file asm-embed-file "scheme_program" compiled-name)
-(system (format "cc -o ~a chez.a ~a ~a ~a ~{ ~s~}" basename asm-embed-file mbits solibs compiler-args))
+(system (format "gcc -o ~a chez.a ~a ~a ~a ~{ ~s~}" basename asm-embed-file mbits solibs compiler-args))
 
 (display basename)
 (newline)

@@ -14,7 +14,7 @@ extern const char chezschemebootfile_end;
 extern const char scheme_program_start;
 extern const char scheme_program_end;
 
-int maketempfile(char *template, const char *contents, size_t size) {
+int maketempfile_(char *template, const char *contents, size_t size) {
 	int fd;
 	fd = mkstemp(template);
 	assert(fd >= 0);
@@ -24,24 +24,49 @@ int maketempfile(char *template, const char *contents, size_t size) {
 	return fd;
 }
 
-int main(int argc, const char **argv) {
-	char bootfilename[] = "/tmp/chezschemebootXXXXXX";
-	int bootfd;
-	char schemefilename[] = "/tmp/schemeprogramXXXXXX";
-	int schemefd;
-        int ret;
+int maketempfile(char *namebuf, const char *contents, size_t size) {
 
-	bootfd = maketempfile(bootfilename, &chezschemebootfile_start, &chezschemebootfile_end - &chezschemebootfile_start);
-	schemefd = maketempfile(schemefilename, &scheme_program_start, &scheme_program_end - &scheme_program_start);
+	tmpnam(namebuf);
+	//printf("tmp name='%s'\n", namebuf);
+	
+	FILE *fp = fopen(namebuf, "wb");
+	if(fp) {
+		fwrite(contents, 1, size, fp);
+		fclose(fp);
+	}
+	return 0;
+}
+
+int main(int argc, const char **argv) {
+	char bootfilename[L_tmpnam] = "";
+	char schemefilename[L_tmpnam] = "";
+
+	maketempfile(bootfilename, &chezschemebootfile_start, &chezschemebootfile_end - &chezschemebootfile_start);
+	maketempfile(schemefilename, &scheme_program_start, &scheme_program_end - &scheme_program_start);
+
+	
+	/*close fd before register boot file: which will cant gzopen: Permission denied.
+	char bootfilename[] = ".\\chezschemebootXXXXXX";
+	int bootfd;
+	char schemefilename[] = ".\\schemeprogramXXXXXX";
+	int schemefd;
+        
+	bootfd = maketempfile_(bootfilename, &chezschemebootfile_start, &chezschemebootfile_end - &chezschemebootfile_start);
+	schemefd = maketempfile_(schemefilename, &scheme_program_start, &scheme_program_end - &scheme_program_start);
+
+	
+	close(bootfd);
+	close(schemefd);
+	but the temporiry files are gone (delete by os).
+	*/
 
 	Sscheme_init(0);
 	Sregister_boot_file(bootfilename);
 	Sbuild_heap(0, 0);
-	ret = Sscheme_program(schemefilename, argc, argv);
+	int ret = Sscheme_program(schemefilename, argc, argv);
 
-	close(bootfd);
-	close(schemefd);
-
+	remove(bootfilename);
+	remove(schemefilename);
+	
 	return ret;
 }
-
